@@ -7,12 +7,11 @@ from calorie_tracker_gui.food_log import FoodLog
 from calorie_tracker_gui.top_bar import TopBar
 from calorie_tracker_gui.exercise_log import ExerciseLog
 
-
 class CalorieTracker(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Calorie Tracker PyQT6")
-        self.resize(800, 750)
+        self.resize(900, 750)
         self.setStyleSheet("background-color: lightgray;") # lightblue, beige
 
         main_layout = QVBoxLayout(self)
@@ -24,6 +23,9 @@ class CalorieTracker(QWidget):
         # ========================= Food Log =========================
         self.food_log = FoodLog() 
         main_layout.addWidget(self.food_log, stretch= 10)
+        
+        # Change the values from calories when you click on a different date
+        self.top_bar.date_entry.dateChanged.connect(self.food_log.load_from_db)
 
         # ========================= Exercise Log =========================
 
@@ -70,15 +72,15 @@ class CalorieTracker(QWidget):
         # --- Food totals ---
         calories = protein = fat = carbs = 0
         for row in range(self.food_log.table.rowCount()):
-            calories += int(self.food_log.table.item(row, 2).text())
-            protein  += int(self.food_log.table.item(row, 3).text())
-            fat      += int(self.food_log.table.item(row, 4).text())
-            carbs    += int(self.food_log.table.item(row, 5).text())
+            calories += float(self.food_log.table.item(row, 2).text())
+            protein  += float(self.food_log.table.item(row, 3).text())
+            fat      += float(self.food_log.table.item(row, 4).text())
+            carbs    += float(self.food_log.table.item(row, 5).text())
 
         # --- Exercise totals ---
         exercise = 0
         for row in range(self.exercise_log.table.rowCount()):
-            exercise += int(self.exercise_log.table.item(row, 2).text())
+            exercise += float(self.exercise_log.table.item(row, 2).text())
 
         # --- Net calories ---
         net = calories - exercise
