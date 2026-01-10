@@ -25,7 +25,7 @@ class CalorieTracker(QWidget):
         main_layout.addWidget(self.food_log, stretch= 10)
         
         # Change the values from calories when you click on a different date
-        self.top_bar.date_entry.dateChanged.connect(self.food_log.load_from_db)
+        self.top_bar.date_entry.dateChanged.connect(self.food_log.load_foods_from_db)
 
         # ========================= Exercise Log =========================
 

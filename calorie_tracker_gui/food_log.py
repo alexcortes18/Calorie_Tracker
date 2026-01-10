@@ -53,7 +53,7 @@ class FoodLog(QWidget):
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.exec()
 
-    def load_from_db(self):
+    def load_foods_from_db(self):
         selected_date = None
         if self.parent() and hasattr(self.parent(), "top_bar"):
             selected_date = self.parent().top_bar.get_date()
