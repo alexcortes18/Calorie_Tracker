@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import (
     QGroupBox, QVBoxLayout, QHBoxLayout,
     QTableWidget, QPushButton, QTableWidgetItem, QMessageBox
 )
+from SQL.db_connection import get_connection
 
 class ExerciseLog(QGroupBox):
     def __init__(self, parent=None):
@@ -34,7 +35,7 @@ class ExerciseLog(QGroupBox):
         self.table.insertRow(row)
         for col in range(self.table.columnCount()):
             header = self.table.horizontalHeaderItem(col).text()
-            if header in ("Exercise", "Duration"):
+            if header in ("Exercise"):
                 self.table.setItem(row, col, QTableWidgetItem("-"))
             else:
                 self.table.setItem(row, col, QTableWidgetItem("0"))
@@ -49,3 +50,43 @@ class ExerciseLog(QGroupBox):
             msg.setText("Please select a row to delete.")
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.exec()
+            
+    def load_exercises_from_db(self):
+        selected_date = None
+        if self.parent() and hasattr(self.parent(), "top_bar"):
+            selected_date = self.parent().top_bar.get_date()
+
+        conn = None
+        cursor = None
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            if selected_date:
+                cursor.execute(
+                    "SELECT exercise, duration, calories_burned "
+                    "FROM exercise_log WHERE date = %s",
+                    (selected_date,)
+                )
+            else:
+                cursor.execute(
+                    "SELECT exercise, duration, calories_burned FROM exercise_log"
+                )
+
+            rows = cursor.fetchall()
+            self.table.setRowCount(0)
+
+            for row_data in rows:
+                row = self.table.rowCount()
+                self.table.insertRow(row)
+                for col, value in enumerate(row_data):
+                    self.table.setItem(row, col, QTableWidgetItem(str(value)))
+
+        except Exception as e:
+            QMessageBox.critical(self, "Database Error", str(e))
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+

@@ -9,5 +9,5 @@ def get_connection():
     )
     if conn.is_connected():
         print("Connection Successful!")
-    return 
+    return conn
 

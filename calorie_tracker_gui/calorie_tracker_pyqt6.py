@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import (
 from calorie_tracker_gui.food_log import FoodLog
 from calorie_tracker_gui.top_bar import TopBar
 from calorie_tracker_gui.exercise_log import ExerciseLog
+from SQL.db_operations import save_food_entries, save_exercise_entries, save_daily_summary
 
 class CalorieTracker(QWidget):
     def __init__(self):
@@ -31,6 +32,9 @@ class CalorieTracker(QWidget):
 
         self.exercise_log = ExerciseLog()
         main_layout.addWidget(self.exercise_log)
+        
+        # Change the values for exercise data when you click on a different date
+        self.top_bar.date_entry.dateChanged.connect(self.exercise_log.load_exercises_from_db)
 
         # ========================= Daily Summary =========================
         summary_group = QGroupBox("Daily Summary")
@@ -68,31 +72,55 @@ class CalorieTracker(QWidget):
         update_button.clicked.connect(self.update_summary)
         main_layout.addWidget(update_button)
 
+    
     def update_summary(self):
         # --- Food totals ---
         calories = protein = fat = carbs = 0
+        food_entries = []
         for row in range(self.food_log.table.rowCount()):
-            calories += float(self.food_log.table.item(row, 2).text())
-            protein  += float(self.food_log.table.item(row, 3).text())
-            fat      += float(self.food_log.table.item(row, 4).text())
-            carbs    += float(self.food_log.table.item(row, 5).text())
+            meal_type = self.food_log.table.item(row, 0).text()
+            food_item = self.food_log.table.item(row, 1).text()
+            cal = float(self.food_log.table.item(row, 2).text())
+            prot = float(self.food_log.table.item(row, 3).text())
+            f = float(self.food_log.table.item(row, 4).text())
+            c = float(self.food_log.table.item(row, 5).text())
+            food_entries.append([meal_type, food_item, cal, prot, f, c])
+            calories += cal
+            protein  += prot
+            fat      += f
+            carbs    += c
 
         # --- Exercise totals ---
         exercise = 0
+        exercise_entries = []
         for row in range(self.exercise_log.table.rowCount()):
-            exercise += float(self.exercise_log.table.item(row, 2).text())
+            exercise_name = self.exercise_log.table.item(row, 0).text()
+            duration = float(self.exercise_log.table.item(row, 1).text())
+            burned = float(self.exercise_log.table.item(row, 2).text())
+            exercise_entries.append([exercise_name, duration, burned])
+            exercise += burned
 
         # --- Net calories ---
         net = calories - exercise
 
         # --- Update labels ---
-        # In here we lookup the dictionary entries and apply (setText) a different value onto each "value_label"
         self.summary_labels["Calories Consumed"].setText(str(calories)) 
         self.summary_labels["Protein (g)"].setText(str(protein))
         self.summary_labels["Fat (g)"].setText(str(fat))
         self.summary_labels["Carbs (g)"].setText(str(carbs))
         self.summary_labels["Exercise (kCal)"].setText(str(exercise))
         self.summary_labels["Net Calories"].setText(str(net))
+
+        # --- Save to DB ---
+        selected_date = self.top_bar.get_date()
+        weight = float(self.top_bar.get_weight() or 0)
+        notes = self.notes_text.toPlainText()
+
+        save_food_entries(food_entries, selected_date)
+        save_exercise_entries(exercise_entries, selected_date)
+        save_daily_summary(selected_date, weight, calories, notes)
+
+
 
             
 if __name__ == "__main__":
