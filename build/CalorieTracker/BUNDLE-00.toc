@@ -1,0 +1,3 @@
+([('CalorieTracker',
+   '/Users/alejandrocortes/Documents/Projects/Calorie_Tracker/dist/CalorieTracker',
+   'EXECUTABLE')],)
