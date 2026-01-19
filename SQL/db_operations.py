@@ -5,33 +5,42 @@ def save_food_entries(entries, date):
     conn = get_connection("saving food!")
     cur = conn.cursor()
     try:
+        # delete all food entries for that date
+        cur.execute("DELETE FROM food_log WHERE date=%s", (date,))
+        
+        # insert fresh entries
         for meal_type, food_item, calories, protein, fat, carbs in entries:
             cur.execute(
-                "UPDATE food_log "
-                "SET calories=%s, protein=%s, fat=%s, carbs=%s "
-                "WHERE date=%s AND meal_type=%s AND food_item=%s",
-                (calories, protein, fat, carbs, date, meal_type, food_item)
+                "INSERT INTO food_log (date, meal_type, food_item, calories, protein, fat, carbs) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                (date, meal_type, food_item, calories, protein, fat, carbs)
             )
         conn.commit()
     finally:
         cur.close()
         conn.close()
 
+
 def save_exercise_entries(entries, date):
     conn = get_connection("saving exercises!")
     cur = conn.cursor()
     try:
+        # delete all exercise entries for that date
+        cur.execute("DELETE FROM exercise_log WHERE date=%s", (date,))
+        
+        # insert fresh entries
         for exercise, duration, burned in entries:
             cur.execute(
-                "UPDATE exercise_log "
-                "SET duration=%s, calories_burned=%s "
-                "WHERE date=%s AND exercise=%s",
-                (duration, burned, date, exercise)
+                "INSERT INTO exercise_log (date, exercise, duration, calories_burned) "
+                "VALUES (%s,%s,%s,%s)",
+                (date, exercise, duration, burned)
             )
         conn.commit()
     finally:
         cur.close()
         conn.close()
+
+
 
 def save_daily_summary(date, weight, total_calories, notes):
     conn = get_connection("saving daily summary")
