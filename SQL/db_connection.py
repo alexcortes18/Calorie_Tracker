@@ -1,6 +1,7 @@
 import mysql.connector
 
-def get_connection():
+def get_connection(connection_location = None):
+    if connection_location == None: connection_location = "NA"
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
@@ -8,6 +9,5 @@ def get_connection():
         database="Calorie_Tracker"
     )
     if conn.is_connected():
-        print("Connection Successful!")
+        print(f"Connection Successful from {connection_location}!")
     return conn
-

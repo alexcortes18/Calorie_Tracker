@@ -6,7 +6,8 @@ from PyQt6.QtWidgets import (
 from calorie_tracker_gui.food_log import FoodLog
 from calorie_tracker_gui.top_bar import TopBar
 from calorie_tracker_gui.exercise_log import ExerciseLog
-from SQL.db_operations import save_food_entries, save_exercise_entries, save_daily_summary
+from PyQt6.QtCore import QDate
+from SQL.db_operations import get_notes, get_summary_entries, save_food_entries, save_exercise_entries, save_daily_summary
 
 class CalorieTracker(QWidget):
     def __init__(self):
@@ -15,7 +16,9 @@ class CalorieTracker(QWidget):
         self.resize(900, 750)
         self.setStyleSheet("background-color: lightgray;") # lightblue, beige
 
-        main_layout = QVBoxLayout(self)
+        main_layout = QVBoxLayout(self) 
+        
+        
 
         # ========================= Top Bar =========================
         self.top_bar = TopBar()
@@ -24,17 +27,11 @@ class CalorieTracker(QWidget):
         # ========================= Food Log =========================
         self.food_log = FoodLog() 
         main_layout.addWidget(self.food_log, stretch= 10)
-        
-        # Change the values from calories when you click on a different date
-        self.top_bar.date_entry.dateChanged.connect(self.food_log.load_foods_from_db)
 
         # ========================= Exercise Log =========================
 
         self.exercise_log = ExerciseLog()
         main_layout.addWidget(self.exercise_log)
-        
-        # Change the values for exercise data when you click on a different date
-        self.top_bar.date_entry.dateChanged.connect(self.exercise_log.load_exercises_from_db)
 
         # ========================= Daily Summary =========================
         summary_group = QGroupBox("Daily Summary")
@@ -71,7 +68,33 @@ class CalorieTracker(QWidget):
         update_button = QPushButton("Update")
         update_button.clicked.connect(self.update_summary)
         main_layout.addWidget(update_button)
+        
+        # ========================= For changing the values of everything:
+                # Change the values from calories when you click on a different date
+        self.top_bar.date_entry.dateChanged.connect(self.on_date_changed)
+        
+        # Trigger once at startup with the current date 
+        self.on_date_changed(self.top_bar.date_entry.date())
+        
+    # =============================== Functions ===============================        
+        
+    def on_date_changed(self, new_date):
+        # New date is given by 'dateChanged' is a Qt signal -> or event emitters.
+        new_date = new_date.toPyDate() #change to a date SQL understands.
+        self.food_log.load_foods_from_db(new_date)
+        self.exercise_log.load_exercises_from_db(new_date)
+        self.top_bar.load_weights_from_db(new_date)
+        self.update_summary_labels_gui(new_date)
+        self.notes_text.setText(get_notes(new_date))
 
+    def update_summary_labels_gui(self, selected_date):
+        summary = get_summary_entries(selected_date)
+        self.summary_labels["Calories Consumed"].setText(str(summary["calories"])) 
+        self.summary_labels["Protein (g)"].setText(str(summary["protein"]))
+        self.summary_labels["Fat (g)"].setText(str(summary["fat"]))
+        self.summary_labels["Carbs (g)"].setText(str(summary["carbs"]))
+        self.summary_labels["Exercise (kCal)"].setText(str(summary["exercise"]))
+        self.summary_labels["Net Calories"].setText(str(summary["net"]))
     
     def update_summary(self):
         # --- Food totals ---
@@ -120,9 +143,6 @@ class CalorieTracker(QWidget):
         save_exercise_entries(exercise_entries, selected_date)
         save_daily_summary(selected_date, weight, calories, notes)
 
-
-
-            
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = CalorieTracker()

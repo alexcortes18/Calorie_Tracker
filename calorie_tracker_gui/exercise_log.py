@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import (
     QTableWidget, QPushButton, QTableWidgetItem, QMessageBox
 )
 from SQL.db_connection import get_connection
+from SQL.db_operations import get_exercises_entries
 
 class ExerciseLog(QGroupBox):
     def __init__(self, parent=None):
@@ -51,42 +52,13 @@ class ExerciseLog(QGroupBox):
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.exec()
             
-    def load_exercises_from_db(self):
-        selected_date = None
-        if self.parent() and hasattr(self.parent(), "top_bar"):
-            selected_date = self.parent().top_bar.get_date()
+    def load_exercises_from_db(self, selected_date):
+        rows = get_exercises_entries(selected_date)
+        self.table.setRowCount(0)
 
-        conn = None
-        cursor = None
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            if selected_date:
-                cursor.execute(
-                    "SELECT exercise, duration, calories_burned "
-                    "FROM exercise_log WHERE date = %s",
-                    (selected_date,)
-                )
-            else:
-                cursor.execute(
-                    "SELECT exercise, duration, calories_burned FROM exercise_log"
-                )
-
-            rows = cursor.fetchall()
-            self.table.setRowCount(0)
-
-            for row_data in rows:
-                row = self.table.rowCount()
-                self.table.insertRow(row)
-                for col, value in enumerate(row_data):
-                    self.table.setItem(row, col, QTableWidgetItem(str(value)))
-
-        except Exception as e:
-            QMessageBox.critical(self, "Database Error", str(e))
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+        for row_data in rows:
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            for col, value in enumerate(row_data):
+                self.table.setItem(row, col, QTableWidgetItem(str(value)))
 

@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QHBoxLayout, QMessageBox
 )
 from SQL.db_connection import get_connection
+from SQL.db_operations import get_food_entries
 
 class FoodLog(QWidget):
     def __init__(self, parent=None):
@@ -53,41 +54,12 @@ class FoodLog(QWidget):
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.exec()
 
-    def load_foods_from_db(self):
-        selected_date = None
-        if self.parent() and hasattr(self.parent(), "top_bar"):
-            selected_date = self.parent().top_bar.get_date()
+    def load_foods_from_db(self, selected_date):
+        rows = get_food_entries(selected_date)
+        self.table.setRowCount(0)
 
-        conn = None
-        cursor = None
-        try:
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            if selected_date:
-                cursor.execute(
-                    "SELECT meal_type, food_item, calories, protein, fat, carbs "
-                    "FROM food_log WHERE date = %s",
-                    (selected_date,)
-                )
-            else:
-                cursor.execute(
-                    "SELECT meal_type, food_item, calories, protein, fat, carbs FROM food_log"
-                )
-
-            rows = cursor.fetchall()
-            self.table.setRowCount(0)
-
-            for row_data in rows:
-                row = self.table.rowCount()
-                self.table.insertRow(row)
-                for col, value in enumerate(row_data):
-                    self.table.setItem(row, col, QTableWidgetItem(str(value)))
-
-        except Exception as e:
-            QMessageBox.critical(self, "Database Error", str(e))
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+        for row_data in rows:
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            for col, value in enumerate(row_data):
+                self.table.setItem(row, col, QTableWidgetItem(str(value)))

@@ -1,0 +1,7 @@
+{
+    "python.defaultInterpreterPath": "/Users/alejandrocortes/Documents/Projects/Calorie_Tracker/calorie_tracker_env/bin/python",
+     "code-runner.executorMap": {
+        "python": "/Users/alejandrocortes/Documents/Projects/Calorie_Tracker/calorie_tracker_env/bin/python -u"
+    }
+}
+
