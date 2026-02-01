@@ -1,6 +1,6 @@
 use Calorie_Tracker;
 
-WITH RECURSIVE my_dates(date)	AS		(SELECT '2026-01-11'
+WITH RECURSIVE my_dates(date)	AS		(SELECT '2026-01-17'
 										UNION ALL
 										SELECT date + INTERVAL 1 DAY
 										FROM my_dates
@@ -14,8 +14,8 @@ WITH RECURSIVE my_dates(date)	AS		(SELECT '2026-01-11'
 												a.total_calories,
 												a.weight - LAG(a.weight) OVER (ORDER BY a.date ASC)AS daily_weight_difference
 								FROM 	my_dates md LEFT JOIN averages a ON md.date = a.date)
--- SELECT AVG(daily_weight_difference) -- * 2.205 as lbs_lost_per_day
--- FROM(
+SELECT AVG(daily_weight_difference) * 2.205 as lbs_lost_per_day
+FROM(
 	SELECT	date, weight, total_calories, daily_weight_difference
-	FROM	final;
---    ) as avg_daily_weight_difference;
+	FROM	final
+   ) as avg_daily_weight_difference;
